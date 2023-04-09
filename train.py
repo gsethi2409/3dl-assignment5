@@ -4,9 +4,11 @@ import torch
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
-from models import cls_model, seg_model
+from models import cls_model, seg_model, DGCNN
 from data_loader import get_data_loader
 from utils import save_checkpoint, create_dir
+
+from pdb import set_trace as bp
 
 def train(train_dataloader, model, opt, epoch, args, writer):
     
@@ -20,7 +22,7 @@ def train(train_dataloader, model, opt, epoch, args, writer):
         labels = labels.to(args.device).to(torch.long)
 
         # ------ TO DO: Forward Pass ------
-        predictions = 
+        predictions = model.forward(point_clouds) # B x 3
 
         if (args.task == "seg"):
             labels = labels.reshape([-1])
@@ -55,7 +57,9 @@ def test(test_dataloader, model, epoch, args, writer):
 
             # ------ TO DO: Make Predictions ------
             with torch.no_grad():
-                pred_labels = 
+                pred_labels = model.forward(point_clouds)
+                pred_labels = pred_labels.max(dim=1)[1]
+                
             correct_obj += pred_labels.eq(labels.data).cpu().sum().item()
             num_obj += labels.size()[0]
 
@@ -73,8 +77,12 @@ def test(test_dataloader, model, epoch, args, writer):
             labels = labels.to(args.device).to(torch.long)
 
             # ------ TO DO: Make Predictions ------
-            with torch.no_grad():     
-                pred_labels = 
+            with torch.no_grad():   
+
+                pred_labels = model.forward(point_clouds)
+                pred_labels = pred_labels.max(dim=-1)[1]
+                # print('labels.shape: ', labels.shape)
+                # print('pred_labels.shape: ', pred_labels.shape)
 
             correct_point += pred_labels.eq(labels.data).cpu().sum().item()
             num_point += labels.view([-1,1]).size()[0]
@@ -95,14 +103,19 @@ def main(args):
     create_dir('./logs')
 
     # Tensorboard Logger
-    writer = SummaryWriter('./logs/{0}'.format(args.task+"_"+args.exp_name))
+    from datetime import datetime
+    writer = SummaryWriter('./logs/{}/{}'.format(args.task+"_"+args.exp_name, datetime.now()))
 
     # ------ TO DO: Initialize Model ------
     if args.task == "cls":
-        model = 
+        if(args.model == "dgcnn"):
+            model = DGCNN(args)
+        else:
+            model = cls_model()
     else:
-        model = 
-    
+        model = seg_model()
+    model = model.to(args.device)
+
     # Load Checkpoint 
     if args.load_checkpoint:
         model_path = "{}/{}.pt".format(args.checkpoint_dir,args.load_checkpoint)
@@ -156,6 +169,7 @@ def create_parser():
 
     # Model & Data hyper-parameters
     parser.add_argument('--task', type=str, default="cls", help='The task: cls or seg')
+    parser.add_argument('--model', type=str, default="dgcnn", help='use dgcnn')
     parser.add_argument('--num_seg_class', type=int, default=6, help='The number of segmentation classes')
 
     # Training hyper-parameters

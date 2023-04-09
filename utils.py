@@ -51,8 +51,43 @@ def get_points_renderer(
     )
     return renderer
 
+def viz_cls (args, verts, labels, path, device):
+    """
+    visualize classification result
+    output: a 360-degree gif
+    """
+    image_size=256
+    background_color=(1, 1, 1)
+    # red - chair, blue - lamp, green - vase
+    colors = [[1.0,0.0,0.0], [0.0,1.0,0.0], [0.0,0.0,1.0]]
 
-def viz_seg (verts, labels, path, device):
+    # Construct various camera viewpoints
+    dist = 3
+    elev = 0
+    azim = [180 - 12*i for i in range(30)]
+    R, T = pytorch3d.renderer.cameras.look_at_view_transform(dist=dist, elev=elev, azim=azim, device=device)
+    c = pytorch3d.renderer.FoVPerspectiveCameras(R=R, T=T, fov=60, device=device)
+
+    sample_verts = verts.unsqueeze(0).repeat(30,1,1).to(torch.float)
+    sample_labels = labels.unsqueeze(0)
+    sample_colors = torch.zeros((1, args.num_points,3))
+    # sample_colors = torch.zeros((1, 10000, 3))
+
+    # Colorize points based on classification labels
+    sample_colors[0] = torch.tensor(colors[labels])
+
+    sample_colors = sample_colors.repeat(sample_verts.shape[0],1,1).to(torch.float).to(device)
+
+    point_cloud = pytorch3d.structures.Pointclouds(points=sample_verts, features=sample_colors).to(device)
+
+    renderer = get_points_renderer(image_size=image_size, background_color=background_color, device=device)
+    rend = renderer(point_cloud, cameras=c).cpu().numpy() # (30, 256, 256, 3)
+
+    imageio.mimsave(path, rend, fps=15)
+
+
+
+def viz_seg (args, verts, labels, path, device):
     """
     visualize segmentation result
     output: a 360-degree gif
@@ -70,13 +105,13 @@ def viz_seg (verts, labels, path, device):
 
     sample_verts = verts.unsqueeze(0).repeat(30,1,1).to(torch.float)
     sample_labels = labels.unsqueeze(0)
-    sample_colors = torch.zeros((1,10000,3))
+    sample_colors = torch.zeros((1, args.num_points, 3))
 
     # Colorize points based on segmentation labels
     for i in range(6):
         sample_colors[sample_labels==i] = torch.tensor(colors[i])
 
-    sample_colors = sample_colors.repeat(30,1,1).to(torch.float)
+    sample_colors = sample_colors.repeat(30,1,1).to(torch.float).to(device)
 
     point_cloud = pytorch3d.structures.Pointclouds(points=sample_verts, features=sample_colors).to(device)
 

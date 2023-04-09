@@ -1,0 +1,242 @@
+**Assignment 5**
+
+Gunjan Sethi: gunjans@andrew.cmu.edu
+
+<img src="images/four.png" width="100px">
+
+(#) Contents
+
+ - [Q1 Classification Model](#q1)
+ - [Q2 Segmentation Model](#q2)
+ - [Q3 Robustness Analysis](#q3)
+ - [Q4 Expressive architectures](#q4)
+ 
+<a name="q1">
+(#) Classification Model
+
+The goal is to implement a classification model for pointclouds across 3 classes.
+
+Command: 
+
+`python train.py --task cls`
+
+(##) Results
+
+| Metric | Value |
+| --- | --- |
+| Test Accuracy | 98.216 % |
+
+(##) Visualization
+
+| GroundTruth | Predicted Label | Details |
+| --- | --- | --- |
+| Chair | Chair | <img src="output/cls_correct_outputs/cls_viz_0_600.gif" width="100px"> | 
+| Lamp | Lamp   | <img src="output/cls_correct_outputs/cls_viz_2_800.gif" width="100px"> | 
+| Vase | Vase   | <img src="output/cls_correct_outputs/cls_viz_1_700.gif" width="100px"> | 
+| Lamp | Vase   | <img src="output/cls_wrong_outputs/cls_viz_1_6.gif"     width="100px"> | 
+| Lamp | Vase   | <img src="output/cls_wrong_outputs/cls_viz_1_7.gif"     width="100px"> | 
+| Vase | Lamp   | <img src="output/cls_wrong_outputs/cls_viz_2_1.gif"     width="100px"> | 
+| Lamp | Vase   | <img src="output/cls_wrong_outputs/cls_viz_1_10.gif"    width="100px"> | 
+
+(##) Interpretation
+
+The classification model performs very well overall. On chairs, the model shows 100% accuracy - all chairs are classified correctly. However, the model confuses between lamps and chiars in some samples. As seen in the visualization section above, the vase with the overarching flower is classified as a lamp.
+
+Hence, the model confuses between samples that are structurly similar to other classes. 
+
+<a name="q2">
+(#) Segmentation Model
+
+The goal is to implement a segmentation model for chair object pointclouds.
+
+Command
+
+`python train.py --task seg`
+
+(##) Results
+
+| Metric | Value |
+| --- | --- |
+| Model Test Accuracy | 90.275 % |
+
+(##) Visualization
+
+| GroundTruth | Predicted | Sample Accuracy |
+| --- | --- | --- |
+| <img src="output/seg_bad_outputs/seg_gtviz_609.gif"  width="100px"> | <img width="100px" src="output/seg_bad_outputs/seg_viz_609.gif">   | 75% |
+| <img src="output/seg_bad_outputs/seg_gtviz_80.gif"   width="100px"> | <img width="100px" src="output/seg_bad_outputs/seg_viz_80.gif">     | 79.89% |
+| <img src="output/seg_good_outputs/seg_gtviz_490.gif" width="100px"> | <img width="100px" src="output/seg_good_outputs/seg_viz_490.gif"> | 99.05% |
+| <img src="output/seg_good_outputs/seg_gtviz_505.gif" width="100px"> | <img width="100px" src="output/seg_good_outputs/seg_viz_505.gif"> | 99.42% |
+| <img src="output/seg_good_outputs/seg_gtviz_397.gif" width="100px"> | <img width="100px" src="output/seg_good_outputs/seg_viz_397.gif"> | 99.64% |
+
+(##) Interpretation
+
+The model performs very well on conventional chairs and is able to segment out chair legs, back rest, arm rest and so on, with over 99% accuracy is some cases. However, the model accuracy drop with unconventional chairs. As seen above, the model segments a large part of the seat as legs. 
+
+<a name="q3">
+(#) Robustness Analysis
+
+Here we conduct experiments with number of points in the pointcloud to evaluate the model robustness. 
+
+(##) Part 1 - Varying Number of Points
+
+(###) Implementation
+
+Here we evaluate the classification and segmentation models on varying number of points - 100, 1000, 5000 and 10000 
+
+
+Command
+
+
+`python eval_cls.py --num_points n`
+
+`python eval_seg.py --num_points n`
+
+where n = 100, 1000, 5000, 10000
+
+(###) Visualizations - Classification
+
+
+| Number of Points | Example 1 | Example 2 | Model Accuracy |
+| --- | --- | --- | --- |
+| 100 |   <img  width="100px" src="output/rob_analy_cls/cls_viz_100_100.gif"> | <img   width="100px" src="output/rob_analy_cls/cls_viz_100_800.gif">    | 92.86% |
+| 1000 |  <img  width="100px" src="output/rob_analy_cls/cls_viz_1000_100.gif"> | <img  width="100px" src="output/rob_analy_cls/cls_viz_1000_800.gif">   | 97.90% |
+| 5000 |  <img  width="100px" src="output/rob_analy_cls/cls_viz_5000_100.gif"> | <img  width="100px" src="output/rob_analy_cls/cls_viz_5000_800.gif">   | 98.42% |
+| 10000 (Q1) | <img  width="100px" src="output/rob_analy_cls/cls_viz_10000_100.gif"> | <img width="100px"  src="output/rob_analy_cls/cls_viz_10000_800.gif"> | 98.21% |
+
+
+(###) Visualizations - Segmentation
+
+| Number of Points | Example 1 | Example 2 | Example 3 |
+| --- | --- | --- | --- |
+| GroundTruth |     <img width="100px" src="output/seg_bad_outputs/seg_gtviz_432.gif">   | <img width="100px" src="output/rob_analy_seg/seg_gtviz_471.gif">     | <img width="100px" src="output/seg_bad_outputs/seg_gtviz_9.gif"> |
+| 100 |        <img width="100px" src="output/rob_analy_seg/seg_viz_100_432.gif">   | <img width="100px" src="output/rob_analy_seg/seg_viz_100_471.gif">   | <img width="100px" src="output/rob_analy_seg/seg_viz_100_9.gif"> |
+| 1000 |        <img width="100px" src="output/rob_analy_seg/seg_viz_1000_432.gif">  | <img width="100px" src="output/rob_analy_seg/seg_viz_1000_471.gif">  | <img width="100px" src="output/rob_analy_seg/seg_viz_1000_9.gif"> |
+| 5000 |        <img width="100px" src="output/rob_analy_seg/seg_viz_5000_432.gif">  | <img width="100px" src="output/rob_analy_seg/seg_viz_5000_471.gif">  | <img width="100px" src="output/rob_analy_seg/seg_viz_5000_9.gif"> |
+| 10000 (Q2) | <img width="100px" src="output/rob_analy_seg/seg_viz_10000_432.gif"> | <img width="100px" src="output/rob_analy_seg/seg_viz_10000_471.gif"> | <img width="100px" src="output/rob_analy_seg/seg_viz_10000_9.gif"> |
+
+
+| Number of Points | Model Accuracy | Example 1 Accuracy | Example 2 Accuracy | Example 3 Accuracy |
+| --- | --- | --- | --- | --- |
+| 100        | 81.28% | 81%     | 94%    | 62%    |
+| 1000       | 89.73% | 68%     | 99%    | 62.3%  | 
+| 5000       | 90.29% | 66.08%  | 99.58% | 64.08% | 
+| 10000 (Q2) | 90.27% | 66.14%  | 99.61% | 62.72% | 
+
+
+
+(###) Interpretation
+
+In the classification task, not much change in accruacy can be seen with varying number of points.
+
+For segmentation, we can see that the model accruacy increases with increasing number of points. This is due to the fact that a dense pointcloud can represent more structurally intricare information. 
+While the above is true for the overall model accuracy, when we investigate individual sample accuracies, we notice a decline in accuracy with more points. In example 1, we can see that the model finds
+it hard to segment the chair due to its unconventional structure. When more points are added, more inaccuratly labeled points accumulate, which reduces the model accuracy.
+
+
+(##) Part 2 - Rotating Pointclouds
+
+(###) Implementation
+
+Here we evaluate the classification and segmentation models on rotated pointclouds - 90 in X-axis, 180 in X-axis and 45 in X-axis + 45 in Y-axis 
+
+
+Command
+
+`python eval_cls.py`
+
+`python eval_seg.py`
+
+
+(###) Visualizations - Classification
+
+Legend:
+* Red - Chair 
+* Blue - Lamp 
+* Green - Vase 
+
+
+| Rotation | Correct Predictions | Failure Cases |
+| --- | --- | --- |
+| 90 in X-axis | <img src="output/rob_analy_rot_90_good/cls_100.gif" width="100px"> <img src="output/rob_analy_rot_90_good/cls_700.gif" width="100px"> <img src="output/rob_analy_rot_90_good/cls_900.gif" width="100px"> <img src="output/rob_analy_rot_90_good/cls_600.gif" width="100px"> | <img src="output/rob_analy_rot_90_bad/cls_150.gif" width="100px"> <img src="output/rob_analy_rot_90_bad/cls_400.gif" width="100px"> <img src="output/rob_analy_rot_90_bad/cls_800.gif" width="100px"> <img src="output/rob_analy_rot_90_bad/cls_550.gif" width="100px"> |
+| 180 in X-axis | <img src="output/rob_analy_rot_180_good/cls_700.gif" width="100px"> <img src="output/rob_analy_rot_180_good/cls_300.gif" width="100px"> <img src="output/rob_analy_rot_180_good/cls_800.gif" width="100px"> <img src="output/rob_analy_rot_180_good/cls_900.gif" width="100px"> | <img src="output/rob_analy_rot_180_bad/cls_150.gif" width="100px"> <img src="output/rob_analy_rot_180_bad/cls_500.gif" width="100px"> <img src="output/rob_analy_rot_180_bad/cls_650.gif" width="100px"> <img src="output/rob_analy_rot_180_bad/cls_950.gif" width="100px">  |
+| 45 in X-axis and 45 in Y-axis| <img src="output/rob_analy_rot_4545_good/cls_650.gif" width="100px"> <img src="output/rob_analy_rot_4545_good/cls_850.gif" width="100px"> <img src="output/rob_analy_rot_4545_good/cls_900.gif" width="100px"> <img src="output/rob_analy_rot_4545_good/cls_950.gif" width="100px"> | <img src="output/rob_analy_rot_4545_bad/cls_800.gif" width="100px"> <img src="output/rob_analy_rot_4545_bad/cls_700.gif" width="100px"> <img src="output/rob_analy_rot_4545_bad/cls_250.gif" width="100px"> <img src="output/rob_analy_rot_4545_bad/cls_600.gif" width="100px"> |
+
+
+| Rotation | Model Accuracy |
+| --- | --- |
+| No Rotation (Q1) | 98.21% |
+| 90 in X-axis | 37.67% |
+| 180 in X-axis | 70.93%  |
+| 45 in X-axis and 45 in Y-axis | 22.98% |
+
+(###) Visualizations - Segmentation
+
+
+| Rotation | Example 1 | Example 2 | Example 3 |
+| --- | --- | --- | --- |
+| GroundTruth | <img src="output/gt/seg_gt_400.gif" width="100px"> | <img src="output/gt/seg_gt_150.gif" width="100px"> | <img src="output/gt/seg_gt_135.gif" width="100px"> |
+| No Rotation | <img src="output/seg_no_rot/seg_400.gif" width="100px"> | <img src="output/seg_no_rot/seg_150.gif" width="100px"> | <img src="output/seg_no_rot/seg_135.gif" width="100px"> |
+| 90 in X-axis | <img src="output/rob_analy_rot_90_bad/seg_400.gif" width="100px"> | <img src="output/rob_analy_rot_90_bad/seg_150.gif" width="100px"> | <img src="output/rob_analy_rot_90_bad/seg_135.gif" width="100px"> |
+| 180 in X-axis | <img src="output/rob_analy_rot_180_bad/seg_400.gif" width="100px"> | <img src="output/rob_analy_rot_180_bad/seg_150.gif" width="100px"> | <img src="output/rob_analy_rot_180_bad/seg_135.gif" width="100px"> |
+| 45 in X-axis and 45 in Y-axis | <img src="output/rob_analy_rot_4545_bad/seg_400.gif" width="100px"> | <img src="output/rob_analy_rot_4545_bad/seg_150.gif" width="100px"> | <img src="output/rob_analy_rot_4545_bad/seg_135.gif" width="100px"> |
+
+
+| Rotation | Model Accuracy | Example 1 Accuracy | Example 2 Accuracy | Example 3 Accuracy |
+| --- | --- | --- | --- | --- |
+| No Rototation (Q2)            | 90.27% | 77.18%  | 97.05% | 78.14% |
+| 90 in X-axis                  | 20.43% | 19.81%     | 23.75%    | 0.02%  |
+| 180 in X-axis                 | 28.17% | 28.17%  | 32.71% | 41.48% | 
+| 45 in X-axis and 45 in Y-axis | 54.08% | 42.85%  | 47.46% | 40.95% |
+
+
+(###) Interpretation
+
+In the classification task, we notice an interesting trend. When the pointclouds are rotated in angles close to 90 degrees, the model struggles to notice class specific features. For example, some chairs are wrongly classified as lamps and vases. 
+When rotated completely upside down, the model's performs slightly better than 90. This is because, for objects like symmetrical vases and lamps, the model is able to learn features despite the rotation. However, we still notice some failure cases in chairs, for instance, where the legs pointing upwards may resemble a vase.
+
+In the segmentation task, the model is highly dependant on spatial features. The model always segments the lower end of the pointcloud as chair legs, even for some conventional chair structures. 
+
+
+<a name="q4">
+(#) Expressive Architectures
+
+(##) Implementation
+
+Here we implement DGCNN - Dynamic Graph CNN for Learning on Point Clouds for pointcloud classification.
+
+The DGCNN model is based on graph convolutional networks (GCNs), which operate on graphs or networks. In the case of point clouds, each point is represented as a node in the graph, and the edges between nodes are determined by their proximity to each other. This graph structure allows the DGCNN to capture the local and global relationships between the points.
+
+One of the key features of the DGCNN model is its ability to handle point clouds of varying sizes and densities. This is achieved by dynamically constructing a graph for each point cloud based on its geometry, rather than using a fixed graph structure.
+
+
+(##) Results
+
+| Model | Epochs | Batch Size | Accruacy |
+| --- | --- | --- |--- |
+| PointNet | 250 | 32 | 98.214% |
+| DGCNN | 40 | 4 | 96.32% |
+
+(##) Results
+
+Legend:
+* Red - Chair 
+* Blue - Lamp 
+* Green - Vase 
+
+| PointNet Prediction | DGCNN Prediction |
+| --- | --- |
+| <img src="output/q4/q1cls_721.gif" width="200px"> | <img src="output/q4/cls_721.gif" width="200px"> |
+| <img src="output/q4/q1cls_543.gif" width="200px"> | <img src="output/q4/cls_543.gif" width="200px"> |
+| <img src="output/q4/q1cls_806.gif" width="200px"> | <img src="output/q4/cls_806.gif" width="200px"> |
+
+<!--- Markdeep & image comparison library - probably no need to change anything below -->
+<style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="./resources/markdeep.min.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="./resources/jquery.event.move.js"></script>
+<script src="./resources/jquery.twentytwenty.js"></script>
+<link href="./resources/offcanvas.css" rel="stylesheet">
+<link href="./resources/twentytwenty.css" rel="stylesheet" type="text/css" />
+<script>
+$(window).load(function(){$(".twentytwenty-container").twentytwenty({default_offset_pct: 0.5});});
+</script>
